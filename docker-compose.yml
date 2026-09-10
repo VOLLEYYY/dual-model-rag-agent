@@ -1,0 +1,81 @@
+# ============================================================
+#  双模型校验知识库 Agent — Docker Compose 编排
+#
+#  服务依赖关系：
+#    agent-api (FastAPI) ← 依赖 Qdrant + Ollama
+#    qdrant              ← 向量数据库
+#    ollama              ← 本地 LLM 运行时（Day 10 启用）
+# ============================================================
+
+services:
+  # ---- FastAPI 应用 ----
+  agent-api:
+    build: .
+    container_name: hello-agent-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # 仅覆盖「容器内跨服务地址」（宿主机直接跑 python run.py 时用 .env 原值）：
+      #   QDRANT_URL 指向 qdrant 容器（否则会退回容器内本地嵌入式 Qdrant）
+      #   provider=deepseek 时连宿主 DeepSeek 代理（host.docker.internal）
+      #   provider=ollama 时连 ollama 容器
+      - QDRANT_URL=http://qdrant:6333
+      - MODEL_A_BASE_URL=http://host.docker.internal:20128/v1
+      - MODEL_B_BASE_URL=http://host.docker.internal:20128/v1
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - agent-network
+
+  # ---- Qdrant 向量数据库 ----
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: hello-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    healthcheck:
+      # qdrant 镜像不含 curl，且 1.19 健康端点是 /healthz（非 /health）
+      # 用 bash /dev/tcp 探测 6333 端口，最通用
+      test: ["CMD", "bash", "-c", ":> /dev/tcp/127.0.0.1/6333 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - agent-network
+
+  # ---- Ollama 本地模型服务 ----
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hello-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - agent-network
+
+volumes:
+  qdrant_data:
+  ollama_data:
+
+networks:
+  agent-network:
+    driver: bridge

@@ -1,0 +1,51 @@
+# ============================================================
+#  Git 忽略规则
+# ============================================================
+
+# ---- 环境与密钥 ----
+.env
+*.key
+*.pem
+secrets/
+
+# ---- Python ----
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# ---- 虚拟环境 ----
+.venv/
+venv/
+agent-env/
+env/
+
+# ---- IDE ----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---- 数据 ----
+# 示例知识库文档（.md/.txt）入库，保证 clone 后能直接跑测试与演示；
+# 若后续放入私有资料，请在此追加忽略规则（如 data/knowledge_base/private/）
+*.db
+*.sqlite3
+
+# ---- Docker ----
+qdrant_data/
+ollama_data/
+
+# ---- 报告与日志 ----
+*.log
+learning_report_*.json
+langfuse/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db

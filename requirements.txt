@@ -1,0 +1,49 @@
+# ============================================================
+#  双模型校验本地知识库 Agent — Python 依赖
+#
+#  「稠密检索」部分缺失时，代码会自动降级到 TF-IDF 稀疏检索，
+#  项目仍可运行（只是检索变回关键词匹配）。
+# ============================================================
+
+# ---- Web 框架 ----
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+
+# ---- 配置管理 ----
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.0
+
+# ---- LLM 调用（OpenAI 兼容客户端） ----
+openai>=1.40.0
+
+# ---- RAG 稠密检索（升级：Qdrant + Embedding） ----
+# 缺失时自动降级到 TF-IDF；sentence-transformers 会拉取 torch，体积较大
+qdrant-client>=1.9.0
+sentence-transformers>=2.7.0
+
+# ---- 健壮性（Day 18：模型调用重试 + 指数退避） ----
+tenacity>=8.2.0
+
+# ---- 测试 ----
+pytest>=8.0.0
+httpx>=0.27.0
+
+# ============================================================
+#  以下为「后续 Day 启用」的可选依赖，当前代码不依赖：
+# ============================================================
+
+# ---- 文档处理（摄入 PDF/Word 时启用） ----
+# markitdown>=0.0.1
+
+# ---- 可观测性（Day 14 启用；可选：未配置密钥时代码自动禁用） ----
+langfuse>=3.0,<4
+
+# ---- 评估驱动调参（RAGAS；可选：用法见 RAGAS-调参说明.md / ragas_tuning.py） ----
+# ragas>=0.4
+# langchain-openai
+# langchain-huggingface
+
+# ---- Web UI（Day 16 启用；仅本地 Gradio 界面需要，不进容器镜像） ----
+# 本地跑 UI 时单独安装：pip install gradio
+# gradio>=4.0.0
